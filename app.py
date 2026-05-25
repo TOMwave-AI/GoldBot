@@ -817,32 +817,41 @@ def render_realtime_dashboard() -> None:
             render_signal_panel("US10Y Yield", yield_text, yield_class, "Gold sensitivity to yield moves")
 
         render_zone_panel("Liquidity Sweep Zone", liquidity_zones(gold.data))
+    st.write("")
 
     st.write("")
-    section_a, section_b, section_c = st.columns([1, 1, 1], gap="large")
+    section_a, section_b, section_c = st.columns([1,1,1], gap="large")
+
     with section_a:
-        render_zone_panel("Order Block", order_blocks(gold.data))
+        render_zone_panel(
+            "Order Block",
+            order_blocks(gold.data)
+        )
+
     with section_b:
-        render_zone_panel("Fair Value Gap", fair_value_gaps(gold.data))
+        render_zone_panel(
+            "Fair Value Gap",
+            fair_value_gaps(gold.data)
+        )
+
     with section_c:
-        st.plotly_chart(mini_line_chart(dxy.data.tail(120), "DXY Intraday", "#8fb9ff"), width="stretch")
-        st.plotly_chart(mini_line_chart(us10y.data.tail(120), "US10Y Intraday", "#d7a84f"), width="stretch")
+        st.plotly_chart(
+            mini_line_chart(
+                dxy.data.tail(120),
+                "DXY Intraday",
+                "#8fb9ff"
+            ),
+                width="stretch"
+        )
 
-    st.write("")
-    st.write("")
-
-show_debug = st.sidebar.toggle(
-    "Debug Mode",
-    value=False
-)
-
-if show_debug:
-    render_data_debug(
-        gold,
-        dxy,
-        us10y
-    )
-
+        st.plotly_chart(
+            mini_line_chart(
+                us10y.data.tail(120),
+                "US10Y Intraday",
+                "#d7a84f"
+            ),
+            width="stretch"
+        )
 
 def main() -> None:
     inject_theme()
