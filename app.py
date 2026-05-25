@@ -658,29 +658,41 @@ def render_signal_panel(title: str, signal: str, css_class: str, caption: str) -
     )
 
 
-def render_zone_panel(title: str, rows: list[tuple[str, float, str]]) -> None:
-    body = ""
+def render_zone_panel(title: str, rows: list[tuple]) -> None:
+    body_parts = []
     if rows:
-        for label, price, tag in rows:
-            body += f"""
-            <div class="zone-row">
-                <div class="zone-label">{label}</div>
-                <div class="zone-price">{price:,.2f}</div>
-                <div class="zone-tag">{tag}</div>
-            </div>
-            """
-    else:
-        body = '<div class="metric-caption">Waiting for enough live data.</div>'
+        for row in rows:
+            if isinstance(row, str):
+                body_parts.append(row)
+                continue
 
-    st.markdown(
-        f"""
-        <div class="panel">
-            <h3>{title}</h3>
-            {body}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            label = str(row[0]) if len(row) > 0 else ""
+            tag = str(row[-1]) if len(row) > 2 else ""
+            price_text = ""
+
+            if len(row) >= 4:
+                try:
+                    price_text = f"{float(row[1]):,.2f} - {float(row[2]):,.2f}"
+                except (TypeError, ValueError):
+                    price_text = f"{row[1]} - {row[2]}"
+            elif len(row) >= 2:
+                try:
+                    price_text = f"{float(row[1]):,.2f}"
+                except (TypeError, ValueError):
+                    price_text = str(row[1])
+
+            body_parts.append(
+                '<div class="zone-row">'
+                f'<div class="zone-label">{label}</div>'
+                f'<div class="zone-price">{price_text}</div>'
+                f'<div class="zone-tag">{tag}</div>'
+                "</div>"
+            )
+    else:
+        body_parts.append('<div class="metric-caption">Waiting for enough live data.</div>')
+
+    html = f'<div class="panel"><h3>{title}</h3>{"".join(body_parts)}</div>'
+    st.markdown(html, unsafe_allow_html=True)
 
 
 def render_price_metrics(gold: MarketSnapshot, dxy: MarketSnapshot, us10y: MarketSnapshot) -> None:
@@ -817,7 +829,19 @@ def render_realtime_dashboard() -> None:
         st.plotly_chart(mini_line_chart(us10y.data.tail(120), "US10Y Intraday", "#d7a84f"), width="stretch")
 
     st.write("")
-    render_data_debug(gold, dxy, us10y)
+    st.write("")
+
+show_debug = st.sidebar.toggle(
+    "Debug Mode",
+    value=False
+)
+
+if show_debug:
+    render_data_debug(
+        gold,
+        dxy,
+        us10y
+    )
 
 
 def main() -> None:
