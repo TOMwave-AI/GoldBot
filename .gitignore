@@ -156,6 +156,10 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+# GoldBot runtime
+last_alert.json
+.goldbot_market_cache.pkl
+streamlit*.log
 
 # Spyder project settings
 .spyderproject
