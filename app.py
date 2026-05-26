@@ -233,6 +233,7 @@ def build_alert_payload(
         "liquidity": format_liquidity_summary(liquidity_rows),
         "macro": macro_signal,
         "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+         "grade": "REJECT",
     }
 
 
@@ -400,28 +401,57 @@ def render_realtime_dashboard(debug_enabled: bool, news_event: str, news_locked:
 
         try:
 
-            if should_send_auto_alert(
-                alert_payload
-            ):
+                if should_send_auto_alert(
+                    alert_payload
+                ):
 
-                ok = send_telegram_alert(
-                    telegram_message
-                )
-
-                if ok:
-
-                    mark_alert_sent(
-                        alert_payload,
-                        telegram_message
+                    grade = alert_payload.get(
+                        "grade",
+                        ""
                     )
-                    log_trade(
+                    st.write(
+                        "DEBUG GRADE",
+                        grade
+                    )
+
+                    st.write(
                         alert_payload
                     )
+                    if grade == "REJECT":
 
-                    st.session_state[
+                        st.session_state[
                         "telegram_status"
-                    ] = "Auto alert sent"
+                    ] = "Rejected setup"
 
+                else:
+
+                    if grade == "REJECT":
+
+                        ok = send_telegram_alert(
+                            telegram_message
+                        )
+
+                        if ok:
+
+                            mark_alert_sent(
+                                alert_payload,
+                                telegram_message
+                            )
+
+                            log_trade(
+                                alert_payload
+                            )
+
+                            st.session_state[
+                                "telegram_status"
+                            ] = "Auto alert sent"
+
+                    else:
+
+                        st.session_state[
+                            "telegram_status"
+                        ] = "Rejected setup"
+                    
         except Exception as e:
 
             st.session_state[

@@ -1,9 +1,13 @@
 import csv
 from pathlib import Path
+from datetime import datetime
 
 JOURNAL_PATH = Path(
     "trade_journal.csv"
 )
+
+TIMEOUT_MINUTES = 240
+
 
 def update_trade_result(
     current_price
@@ -68,14 +72,77 @@ def update_trade_result(
 
             result = ""
 
-            if current_price <= tp2:
-                result = "TP2"
+            risk = abs(
+                entry - sl
+            )
 
-            elif current_price <= tp1:
-                result = "TP1"
+            reward_tp1 = abs(
+                entry - tp1
+            )
 
-            elif current_price >= sl:
-                result = "SL"
+            reward_tp2 = abs(
+                entry - tp2
+            )
+
+            row[
+                "r_tp1"
+            ] = round(
+                reward_tp1 /
+                risk,
+                2
+            )
+
+            row[
+                "r_tp2"
+            ] = round(
+                reward_tp2 /
+                risk,
+                2
+            )
+            r2 = row[
+                "r_tp2"
+            ]
+
+            if r2 >= 4:
+                row["grade"] = "GOD"
+
+            elif r2 >= 3:
+                row["grade"] = "S"
+
+            elif r2 >= 2:
+                row["grade"] = "A"
+
+            elif r2 >= 1.5:
+                row["grade"] = "B"
+
+            else:
+                row["grade"] = "REJECT"
+
+            is_sell = (
+                tp1 < entry
+            )
+
+            if is_sell:
+
+                if current_price <= tp2:
+                    result = "TP2"
+
+                elif current_price <= tp1:
+                    result = "TP1"
+
+                elif current_price >= sl:
+                    result = "SL"
+
+            else:
+
+                if current_price >= tp2:
+                    result = "TP2"
+
+                elif current_price >= tp1:
+                    result = "TP1"
+
+                elif current_price <= sl:
+                    result = "SL"
 
             row[
                 "result"
@@ -84,6 +151,9 @@ def update_trade_result(
             rows.append(
                 row
             )
+
+    if not rows:
+        return
 
     with open(
         JOURNAL_PATH,

@@ -50,7 +50,10 @@ def log_trade(payload):
 
         "liquidity": payload.get("liquidity"),
         "ai": payload.get("ai_bias"),
-        "result": ""
+        "result": "",
+        "r_tp1":"",
+        "r_tp2":"",
+        "grade":""
     }
 
     file_exists = (
