@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 import hashlib
 import json
+from outcome import update_trade_result
+from journal import log_trade
 from urllib.parse import quote
 
 import streamlit as st
@@ -267,16 +269,36 @@ def render_telegram_controls() -> bool:
         try:
             message = st.session_state.get("telegram_message", "🔥 XAUUSD ALERT\n\nNo signal calculated yet.")
             payload = st.session_state.get("alert_payload")
-            OK=send_telegram_alert(message)
+
+            ok=send_telegram_alert(message)
             
-            if  ok:
+            if ok:                
 
                 if payload:
                     mark_alert_sent(payload, message)
+                    
+                    log_trade(
+                        payload
+                    )
+
+                    print(
+                        "LOG TRADE RUN",
+                        payload
+                    )
+                     
+
             st.success("Telegram signal sent")
-        except Exception:
-            st.error("Telegram failed")
-    return auto_alert_enabled
+
+        except Exception as e:
+            print(
+                "TELEGRAM ERROR",
+                e
+            )
+
+            st.error(
+                f"Telegram failed: {e}"
+            )
+        return auto_alert_enabled
 
 
 def render_price_metrics(gold, dxy, us10y) -> None:
@@ -374,7 +396,7 @@ def render_realtime_dashboard(debug_enabled: bool, news_event: str, news_locked:
     if "auto_initialized" not in st.session_state:
         st.session_state["auto_initialized"] = True
 
-    elif auto_alert_enabled and telegram_configured():
+    if auto_alert_enabled and telegram_configured():
 
         try:
 
@@ -392,6 +414,9 @@ def render_realtime_dashboard(debug_enabled: bool, news_event: str, news_locked:
                         alert_payload,
                         telegram_message
                     )
+                    log_trade(
+                        alert_payload
+                    )
 
                     st.session_state[
                         "telegram_status"
@@ -402,6 +427,12 @@ def render_realtime_dashboard(debug_enabled: bool, news_event: str, news_locked:
             st.session_state[
             "telegram_status"
         ] = str(e)
+            
+    if gold.price:
+
+        update_trade_result(
+        gold.price
+        )
 
     render_price_metrics(gold, dxy, us10y)
 
